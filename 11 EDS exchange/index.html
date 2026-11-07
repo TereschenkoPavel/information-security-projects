@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ЭЦП: RSA, Эль-Гамаль, Шнорр</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .tabs { margin-bottom: 20px; }
+    .tab-button { padding: 8px 16px; margin-right: 8px; cursor: pointer; background: #ddd; border: none; }
+    .tab-button.active { background: #4CAF50; color: white; }
+    .tab-content { display: none; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+    .tab-content.active { display: block; }
+    pre { background: #f4f4f4; padding: 10px; overflow: auto; max-height: 150px; }
+    textarea { width: 100%; height: 80px; margin: 10px 0; padding: 8px; font-family: monospace; }
+    button { margin: 5px; padding: 6px 12px; cursor: pointer; }
+    .key-section { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px; }
+    input[type="text"] { padding: 4px; }
+  </style>
+</head>
+<body>
+<h1>Лабораторная работа: ЭЦП (RSA, Эль-Гамаль, Шнорр)</h1>
+<div class="tabs">
+  <button class="tab-button active" data-tab="rsa">RSA (2048 бит)</button>
+  <button class="tab-button" data-tab="elgamal">Эль-Гамаль (1024 бит)</button>
+  <button class="tab-button" data-tab="schnorr">Шнорр (1024/160 бит)</button>
+</div>
+
+<!-- RSA -->
+<div id="rsa" class="tab-content active">
+  <h2>RSA</h2>
+  <button id="genRsa">Сгенерировать ключи (2048)</button>
+  <div><strong>Публичный ключ (PEM):</strong><pre id="rsaPub"></pre></div>
+  <div><strong>Приватный ключ (PEM):</strong><pre id="rsaPriv"></pre></div>
+  <textarea id="rsaMsg" placeholder="Введите сообщение для подписи..."></textarea>
+  <button id="signRsa">Подписать</button>
+  <div><strong>Подпись (base64):</strong> <span id="rsaSig"></span> <em>(время: <span id="rsaSigTime"></span> мс)</em></div>
+  <button id="verifyRsa">Проверить подпись</button>
+  <div><strong>Результат:</strong> <span id="rsaVerResult"></span> <em>(время: <span id="rsaVerTime"></span> мс)</em></div>
+  <div class="key-section">
+    <h3>Обмен открытым ключом по сети</h3>
+    <button id="exportRsaPub">Копировать публичный ключ</button>
+    <button id="sendRsaKey">Отправить ключ на IP: <input id="sendIp" value="127.0.0.1" size="12"> порт <input id="sendPort" value="3000" size="5"></button>
+    <button id="importRsaKey">Импортировать полученный ключ (из буфера)</button>
+  </div>
+</div>
+
+<!-- Эль-Гамаль (аналогично) -->
+<div id="elgamal" class="tab-content">
+  <h2>Эль-Гамаль (p ~1024 бит)</h2>
+  <button id="genElgamal">Сгенерировать ключи</button>
+  <div><strong>Параметры:</strong> p = <span id="elP"></span><br> g = <span id="elG"></span><br> y = <span id="elY"></span></div>
+  <div><strong>Приватный x:</strong> <span id="elX"></span></div>
+  <textarea id="elMsg" placeholder="Сообщение"></textarea>
+  <button id="signElgamal">Подписать</button>
+  <div><strong>Подпись (r, s):</strong> r = <span id="elR"></span><br> s = <span id="elS"></span> <em>(время: <span id="elSigTime"></span> мс)</em></div>
+  <button id="verifyElgamal">Проверить</button>
+  <div><strong>Результат:</strong> <span id="elVerResult"></span> <em>(время: <span id="elVerTime"></span> мс)</em></div>
+  <div class="key-section">
+    <button id="exportElgamalPub">Копировать открытые параметры</button>
+    <button id="sendElgamalKey">Отправить</button>
+    <button id="importElgamalKey">Импортировать</button>
+  </div>
+</div>
+
+<!-- Шнорр -->
+<div id="schnorr" class="tab-content">
+  <h2>Шнорр (p ~1024, q ~160 бит)</h2>
+  <button id="genSchnorr">Сгенерировать ключи</button>
+  <div><strong>Параметры:</strong> p = <span id="sP"></span><br> q = <span id="sQ"></span><br> g = <span id="sG"></span><br> y = <span id="sY"></span></div>
+  <div><strong>Приватный x:</strong> <span id="sX"></span></div>
+  <textarea id="sMsg" placeholder="Сообщение"></textarea>
+  <button id="signSchnorr">Подписать</button>
+  <div><strong>Подпись (e, s):</strong> e = <span id="sE"></span><br> s = <span id="sS"></span> <em>(время: <span id="sSigTime"></span> мс)</em></div>
+  <button id="verifySchnorr">Проверить</button>
+  <div><strong>Результат:</strong> <span id="sVerResult"></span> <em>(время: <span id="sVerTime"></span> мс)</em></div>
+  <div class="key-section">
+    <button id="exportSchnorrPub">Копировать</button>
+    <button id="sendSchnorrKey">Отправить</button>
+    <button id="importSchnorrKey">Импортировать</button>
+  </div>
+</div>
+
+<script src="renderer.js"></script>
+</body>
+</html>

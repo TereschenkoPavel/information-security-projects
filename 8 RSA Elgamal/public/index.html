@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Лабораторная работа №10 - RSA и Эль-Гамаль</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { width: 30vw; background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 100px; padding: 10px; font-family: monospace; }
+        input { padding: 8px; margin: 5px; }
+        .result { background: #e9ecef; padding: 10px; border-radius: 4px; margin-top: 10px; font-family: monospace; word-break: break-all; }
+        .row { display: flex; gap: 20px; }
+        .col { flex: 1; }
+        .key-info { overflow: hidden; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 12px; }
+        hr { margin: 20px 0; }
+        .compare-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .compare-table th, .compare-table td { border: 1px solid #ddd; padding: 10px; text-align: left; vertical-align: top; }
+        .compare-table th { background: #f2f2f2; font-weight: bold; }
+        .compare-table td:first-child { background: #f9f9f9; font-weight: bold; width: 30%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Лабораторная работа №10</h1>
+        <h3>Асимметричные шифры: RSA и Эль-Гамаля</h3>
+        
+        <div class="card compare-card">
+            <h2>Сравнение RSA и Эль-Гамаля</h2>
+            <div>
+                <label>Тестовое сообщение: </label>
+                <input type="text" id="compareText" value="Терещенко Павел" size="40">
+                <button onclick="runComparison()">Запустить сравнение</button>
+            </div>
+            <div id="comparisonResult" class="result"></div>
+        </div>
+        
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <h2>RSA</h2>
+                    <div>
+                        <label>Размер ключа (бит):</label>
+                        <input type="number" id="rsaBits" value="512" step="64">
+                        <button onclick="generateRSA()">Сгенерировать ключи</button>
+                    </div>
+                    <div id="rsaKeys" class="key-info"></div>
+                    <hr>
+                    <h4>Зашифрование</h4>
+                    <textarea id="rsaPlaintext" placeholder="Введите текст..."></textarea>
+                    <button onclick="encryptRSA()">Зашифровать RSA</button>
+                    <div id="rsaCipherResult" class="result"></div>
+                    <h4>Расшифрование</h4>
+                    <textarea id="rsaCiphertext" placeholder="Введите шифртекст..."></textarea>
+                    <button onclick="decryptRSA()">Расшифровать RSA</button>
+                    <div id="rsaPlainResult" class="result"></div>
+                </div>
+            </div>
+            
+            <div class="col">
+                <div class="card">
+                    <h2>Эль-Гамаля</h2>
+                    <div>
+                        <label>Размер ключа (бит):</label>
+                        <input type="number" id="elgamalBits" value="512" step="32">
+                        <button onclick="generateElGamal()">Сгенерировать ключи</button>
+                    </div>
+                    <div id="elgamalKeys" class="key-info"></div>
+                    <hr>
+                    <h4>Зашифрование</h4>
+                    <textarea id="elgamalPlaintext" placeholder="Введите текст..."></textarea>
+                    <button onclick="encryptElGamal()">Зашифровать Эль-Гамаль</button>
+                    <div id="elgamalCipherResult" class="result"></div>
+                    <h4>Расшифрование</h4>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">Формат: a1,a2,a3... и b1,b2,b3...</div>
+                    <textarea id="elgamalCiphertextA" placeholder="Введите a (список через запятую)..."></textarea>
+                    <textarea id="elgamalCiphertextB" placeholder="Введите b (список через запятую)..." style="margin-top: 5px;"></textarea>
+                    <button onclick="decryptElGamal()">Расшифровать Эль-Гамаль</button>
+                    <div id="elgamalPlainResult" class="result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let rsaPublic = null;
+        let rsaPrivate = null;
+        let elgamalPublic = null;
+        let elgamalPrivate = null;
+        
+        async function runComparison() {
+            const text = document.getElementById('compareText').value;
+            const resultDiv = document.getElementById('comparisonResult');
+            resultDiv.innerHTML = 'Выполняется сравнение...';
+            
+            const rsaStart = performance.now();
+            const rsaGenRes = await fetch('/api/rsa/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bits: 512 })
+            });
+            const rsaKeys = await rsaGenRes.json();
+            
+            const rsaEncRes = await fetch('/api/rsa/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, e: rsaKeys.publicKey.e, n: rsaKeys.publicKey.n })
+            });
+            const rsaEnc = await rsaEncRes.json();
+            
+            const rsaDecRes = await fetch('/api/rsa/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ciphertext: rsaEnc.ciphertext, d: rsaKeys.privateKey.d, n: rsaKeys.privateKey.n })
+            });
+            const rsaDec = await rsaDecRes.json();
+            const rsaEnd = performance.now();
+            
+            const elgamalStart = performance.now();
+            const elgamalGenRes = await fetch('/api/elgamal/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bits: 512 })
+            });
+            const elgamalKeys = await elgamalGenRes.json();
+            
+            const elgamalEncRes = await fetch('/api/elgamal/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, p: elgamalKeys.publicKey.p, g: elgamalKeys.publicKey.g, y: elgamalKeys.publicKey.y })
+            });
+            const elgamalEnc = await elgamalEncRes.json();
+            
+            const elgamalDecRes = await fetch('/api/elgamal/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ a: elgamalEnc.a, b: elgamalEnc.b, p: elgamalKeys.privateKey.p, x: elgamalKeys.privateKey.x })
+            });
+            const elgamalDec = await elgamalDecRes.json();
+            const elgamalEnd = performance.now();
+            
+            const rsaTime = (rsaEnd - rsaStart).toFixed(2);
+            const elgamalTime = (elgamalEnd - elgamalStart).toFixed(2);
+            const rsaCipherLen = rsaEnc.ciphertext.length;
+            const elgamalCipherLen = elgamalEnc.a.length + elgamalEnc.b.length;
+            
+            resultDiv.innerHTML = `
+                <table class="compare-table">
+                    <tr>
+                        <th>Параметр</th>
+                        <th>RSA (512 бит)</th>
+                        <th>Эль-Гамаля (512 бит)</th>
+                    </tr>
+                    <tr>
+                        <td>Время выполнения (мс)</td>
+                        <td class="${rsaTime < elgamalTime ? 'success' : ''}">${rsaTime} мс</td>
+                        <td class="${elgamalTime < rsaTime ? 'success' : ''}">${elgamalTime} мс</td>
+                    </tr>
+                    <tr>
+                        <td>Длина шифротекста (цифр)</td>
+                        <td>${rsaCipherLen}</td>
+                        <td>${elgamalCipherLen} (a=${elgamalEnc.a.length} + b=${elgamalEnc.b.length})</td>
+                    </tr>
+                    <tr>
+                        <td>Результат расшифрования</td>
+                        <td>${rsaDec.text}</td>
+                        <td>${elgamalDec.text}</td>
+                    </tr>
+                </table>
+                <br>
+                <strong>Вывод:</strong><br>
+                ${rsaTime < elgamalTime ? 'RSA' : 'Эль-Гамаля'} оказался быстрее на ${Math.abs(rsaTime - elgamalTime).toFixed(2)} мс.<br>
+                Шифротекст RSA в ${(elgamalCipherLen / rsaCipherLen).toFixed(1)} раз короче.
+            `;
+        }
+        
+        async function generateRSA() {
+            const bits = document.getElementById('rsaBits').value;
+            const response = await fetch('/api/rsa/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bits: parseInt(bits) })
+            });
+            const data = await response.json();
+            rsaPublic = data.publicKey;
+            rsaPrivate = data.privateKey;
+            document.getElementById('rsaKeys').innerHTML = `
+                <strong>Открытый ключ:</strong><br>
+                e = ${data.publicKey.e}<br>
+                n = ${data.publicKey.n}<br>
+                <strong>Закрытый ключ:</strong><br>
+                d = ${data.privateKey.d}
+            `;
+        }
+        
+        async function encryptRSA() {
+            const text = document.getElementById('rsaPlaintext').value;
+            const response = await fetch('/api/rsa/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, e: rsaPublic.e, n: rsaPublic.n })
+            });
+            const data = await response.json();
+            document.getElementById('rsaCipherResult').innerHTML = `<strong>Зашифровано:</strong><br>${data.ciphertext}`;
+            document.getElementById('rsaCiphertext').value = data.ciphertext;
+        }
+        
+        async function decryptRSA() {
+            const ciphertext = document.getElementById('rsaCiphertext').value;
+            const response = await fetch('/api/rsa/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ciphertext: ciphertext, d: rsaPrivate.d, n: rsaPrivate.n })
+            });
+            const data = await response.json();
+            document.getElementById('rsaPlainResult').innerHTML = `<strong>Расшифровано:</strong><br>${data.text}`;
+        }
+        
+        async function generateElGamal() {
+            const bits = document.getElementById('elgamalBits').value;
+            const response = await fetch('/api/elgamal/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bits: parseInt(bits) })
+            });
+            const data = await response.json();
+            elgamalPublic = data.publicKey;
+            elgamalPrivate = data.privateKey;
+            document.getElementById('elgamalKeys').innerHTML = `
+                <strong>Открытый ключ:</strong><br>
+                p = ${data.publicKey.p}<br>
+                g = ${data.publicKey.g}<br>
+                y = ${data.publicKey.y}<br>
+                <strong>Закрытый ключ:</strong><br>
+                x = ${data.privateKey.x}
+            `;
+        }
+        
+        async function encryptElGamal() {
+            const text = document.getElementById('elgamalPlaintext').value;
+            const response = await fetch('/api/elgamal/encrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text, p: elgamalPublic.p, g: elgamalPublic.g, y: elgamalPublic.y })
+            });
+            const data = await response.json();
+            
+            document.getElementById('elgamalCipherResult').innerHTML = `
+                <strong>Зашифровано:</strong><br>
+                <strong>a:</strong> ${data.a}<br>
+                <strong>b:</strong> ${data.b}
+            `;
+            document.getElementById('elgamalCiphertextA').value = data.a;
+            document.getElementById('elgamalCiphertextB').value = data.b;
+        }
+        
+        async function decryptElGamal() {
+            const a = document.getElementById('elgamalCiphertextA').value;
+            const b = document.getElementById('elgamalCiphertextB').value;
+            
+            if (!a || !b) {
+                alert('Введите значения a и b');
+                return;
+            }
+            
+            const response = await fetch('/api/elgamal/decrypt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ a: a, b: b, p: elgamalPrivate.p, x: elgamalPrivate.x })
+            });
+            const data = await response.json();
+            document.getElementById('elgamalPlainResult').innerHTML = `<strong>Расшифровано:</strong><br>${data.text}`;
+        }
+    </script>
+</body>
+</html>

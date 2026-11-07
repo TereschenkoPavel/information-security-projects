@@ -1,0 +1,17 @@
+{
+  "name": "ib_3k_6s_10l",
+  "version": "1.0.0",
+  "description": "",
+  "main": "1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "big-integer": "^1.6.52",
+    "express": "^5.2.1"
+  }
+}

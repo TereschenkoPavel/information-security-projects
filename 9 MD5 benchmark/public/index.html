@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD5 Hasher & Benchmark</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #1e466e; }
+        textarea { width: 100%; height: 120px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px; font-family: monospace; resize: vertical; }
+        button { background: #0078d7; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #005a9e; }
+        .result { background: #eef; padding: 12px; border-left: 4px solid #0078d7; margin-top: 15px; word-break: break-all; font-family: monospace; }
+        input { padding: 8px; width: 100px; border: 1px solid #ccc; border-radius: 4px; }
+        .bench-details { font-size: 14px; color: #2c6e2c; }
+        hr { margin: 15px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="card">
+        <h2>Вычисление MD5 хэша</h2>
+        <textarea id="inputText" placeholder="Введите текст для хэширования..."></textarea>
+        <button id="hashBtn">Рассчитать MD5</button>
+        <div class="result" id="resultDiv">Хэш: —</div>
+    </div>
+
+    <div class="card">
+        <h2>Оценка быстродействия (Benchmark)</h2>
+        <p>Размер тестовых данных в оперативной памяти:</p>
+        <input type="number" id="dataSize" value="500" min="1" max="2000" step="100">
+        <button id="benchBtn" style="margin-left: 10px;">Запустить тест</button>
+        <div class="result" id="benchDiv">Результат: —</div>
+    </div>
+</div>
+
+<script src="/client.js"></script>
+</body>
+</html>
